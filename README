@@ -1,4 +1,23 @@
 Ruby wrapper for pjsip library.
 You must heave pjsip library compiled and installed.
-Only supports Snow Leopard for now.
-But it's just the beginning....
+This have be modified to support debian 6.0.4
+
+For other linux distro/ osx (UNIX-like system), please edit the extconf.rb targetName to corresponding pjsip library (it should work)
+If you find make error while building the shared library,
+something like "relocation R_X86_64_32 against `pjsua_var' can not be used when making a shared object; recompile with -fPIC"
+You may have to re-compile the pjsip again and add -fPIC as FLAG
+
+./configure CFLAGS=-fPIC CXXFLAGS=-fPIC
+make dep && make
+
+also added a simple send_im method for sending out im message
+
+
+some simple guideline:
+compile pjsip on your system
+modify extconf.rb depend on your system
+ruby extconf.rb
+make
+now you should have the .so / .bundle shared library file
+and test with ruby test_pjsip.rb to see if it is work
+(please change the test_pjsip.rb with some working sip account)

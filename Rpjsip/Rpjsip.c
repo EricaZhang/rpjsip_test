@@ -28,6 +28,8 @@ VALUE method_pjsip_destroy(VALUE self);
 
 VALUE method_make_call(VALUE self, VALUE hash);
 
+VALUE method_send_im(VALUE self, VALUE hash);
+
 VALUE method_end_call(VALUE self, VALUE call_id);
 	
 // initializes the module
@@ -36,6 +38,7 @@ void Init_rpjsip() {
 	rb_define_method(Rpjsip, "pjsip_init", method_pjsip_init, 1);
 	rb_define_method(Rpjsip, "pjsip_destroy", method_pjsip_destroy, 0);	
 	rb_define_method(Rpjsip, "make_call", method_make_call, 1);	
+	rb_define_method(Rpjsip, "send_im", method_send_im, 1);	
 	rb_define_method(Rpjsip, "end_call", method_end_call, 1 );
 }
 
@@ -59,6 +62,20 @@ VALUE method_make_call(VALUE self, VALUE hash)
 	execBlock(self);
 	return v;	
 }
+
+VALUE method_send_im(VALUE self, VALUE hash)
+{
+	//VALUE acc_id, volatile VALUE to, VALUE domain, VALUE msgbody
+	
+	int  acc_id = get_value( hash, ":account_id", integer );
+	char * to = get_value(hash, ":to", string);
+	char * domain = get_value(hash, ":domain", string);
+	char * msgbody = get_value(hash, ":msgbody", string);
+	VALUE v =  INT2NUM(sendIm( acc_id, to, domain, msgbody ));
+	execBlock(self);
+	return v;	
+}
+
 
 VALUE execBlock(VALUE v)
 {

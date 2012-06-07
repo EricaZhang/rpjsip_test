@@ -94,7 +94,7 @@ int init(  char *domain, char * user, char * passwd, char *proxy)
     {
 		pjsua_transport_config cfg;
 		pjsua_transport_config_default(&cfg);
-		cfg.port = 55060;
+		cfg.port = 50;
 		status = pjsua_transport_create(PJSIP_TRANSPORT_UDP, &cfg, NULL);
 		if (status != PJ_SUCCESS)
 		{
@@ -142,7 +142,7 @@ int call( int acc_id, char* number, char* domain )
 {
 		char str_uri[13+strlen(number)+strlen(domain)];
 
-		sprintf( str_uri, "sip:%s@%s.com.br", number, domain);
+		sprintf( str_uri, "sip:%s@%s", number, domain);
 
 		pj_str_t uri = pj_str(str_uri);
 		pjsua_call_id call_id;
@@ -154,6 +154,26 @@ int call( int acc_id, char* number, char* domain )
 			error_exit("Error making call", status); 
 		}
 		return call_id;
+}
+
+int sendIm( int acc_id, char* to, char* domain, char* msgbody )
+{
+		char str_uri[13+strlen(to)+strlen(domain)];
+
+		sprintf( str_uri, "sip:%s@%s", to, domain);
+		
+		pj_str_t tmp_uri = pj_str(str_uri);
+		pj_str_t msg = pj_str(msgbody);
+		
+		pj_status_t	status = pjsua_im_send(acc_id, &tmp_uri, NULL, &msg, NULL, NULL);
+
+		int result = 1;
+		if (status != PJ_SUCCESS) 
+		{ 
+			result = 0;
+			error_exit("Error sending im", status);
+		}
+		return result;
 }
 
 void destroy()
