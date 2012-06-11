@@ -53,12 +53,88 @@ static void on_call_media_state(pjsua_call_id call_id)
     }
 }
 
+
+/** callback wrapper function called by pjsip
+ * Incoming IM message (i.e. MESSAGE request)!*/
+static void on_pager_wrapper(pjsua_call_id call_id, const pj_str_t *from,
+		                     const pj_str_t *to, const pj_str_t *contact,
+						     const pj_str_t *mime_type, const pj_str_t *text)
+{
+	if (call_id == -1) { 
+		PJ_UNUSED_ARG(call_id);
+		PJ_UNUSED_ARG(to);
+		PJ_UNUSED_ARG(contact);
+		PJ_UNUSED_ARG(mime_type);
+
+		printf ("~~~\n\n %.*s", (*from).slen, (*from).ptr);		
+		printf ("\n %.*s \n\n~~~\n", (*text).slen, (*text).ptr);
+	}
+
+}
+
+static void on_pager_status(pjsua_call_id call_id, const pj_str_t *to,
+                            const pj_str_t *body, void *user_data,
+                            pjsip_status_code status, const pj_str_t *reason)
+{
+	if (call_id == -1) {
+		
+	}
+}
+
 /* Display error and exit application */
 static void error_exit(const char *title, pj_status_t status)
 {
     pjsua_perror(THIS_FILE, title, status);
     pjsua_destroy();
     exit(1);
+}
+
+			
+static void substr(char *dest, const char* src, unsigned int start, unsigned long cnt) {
+   strncpy(dest, src + start, cnt);
+   dest[cnt] = 0;
+}
+
+static char* pjStr_to_cstring(pj_str_t pjStr) {
+
+    // if (pj_strcmp(pjStr, pj_str("")) != 0) {
+        // If there's utf-8 ptr length is possibly lower than slen
+        long len = pjStr.slen;
+        if (pjStr.ptr != "") {
+            if (strlen(pjStr.ptr) < len) {
+                len = strlen(pjStr.ptr);
+            }
+                
+            if (len > 0) {
+    				char *s = pjStr.ptr;
+    				char t[len+1];
+    				substr(t, s, 0, len);
+                return t;
+            }
+        }
+    // }
+    return "";
+	
+	// pj_caching_pool cp;
+	//     pj_pool_t *pool;
+	// 
+	//     // Must create pool before we can allocate anything
+	//     pool = pj_pool_create(&cp.factory,  // the factory
+	//                           "pool1",   // pool's name
+	//                           4000,      // initial size
+	//                           4000,      // increment size
+	//                           NULL);     // use default callback.
+	//     if (pool == NULL) {
+	//         error_exit("Error in pjsua_create()", PJ_ENOMEM);
+	//         return;
+	//     }
+	// 
+	// pj_str_t *t;
+	// pj_strdup_with_null(pool, t, pjStr);
+	// 
+	// pj_pool_release(pool);
+	// 
+	// return *t.ptr;
 }
 
 int init(  char *domain, char * user, char * passwd, char *proxy)
@@ -77,9 +153,13 @@ int init(  char *domain, char * user, char * passwd, char *proxy)
 	pjsua_logging_config log_cfg;
 
 	pjsua_config_default(&cfg);
+	
+	/* initialize pjsua callbacks */
 	cfg.cb.on_incoming_call = &on_incoming_call;
 	cfg.cb.on_call_media_state = &on_call_media_state;
 	cfg.cb.on_call_state = &on_call_state;
+	cfg.cb.on_pager = &on_pager_wrapper;
+	cfg.cb.on_pager_status = &on_pager_status;
 
 	pjsua_logging_config_default(&log_cfg);
 	log_cfg.console_level = 4;
@@ -88,7 +168,7 @@ int init(  char *domain, char * user, char * passwd, char *proxy)
 	if (status != PJ_SUCCESS) error_exit("Error in pjsua_init()", status);
     }
 	pjsua_media_config media_cfg;
-	 pjsua_media_config_default(&media_cfg);
+	pjsua_media_config_default(&media_cfg);
 
     /* Add UDP transport. */
     {
