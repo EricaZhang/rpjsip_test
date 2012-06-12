@@ -6,6 +6,11 @@
 
 #include "pjmanager.h"
 
+static int (*message_status)(int event, void *userdata, int status);
+static int (*income_message)(int event, void *userdata, char* from, char* to, char* body, long fromLen, long toLen, long bodyLen);
+static void *userData1;
+static void *userData2;
+
 
 /* Callback called by the library upon receiving incoming call */
 static void on_incoming_call(pjsua_acc_id acc_id, pjsua_call_id call_id,
@@ -53,63 +58,27 @@ static void on_call_media_state(pjsua_call_id call_id)
     }
 }
 
-
-/** callback wrapper function called by pjsip
- * Incoming IM message (i.e. MESSAGE request)!*/
-static void on_pager_wrapper(pjsua_call_id call_id, const pj_str_t *from,
-		                     const pj_str_t *to, const pj_str_t *contact,
-						     const pj_str_t *mime_type, const pj_str_t *text)
-{
-	if (call_id == -1) { 
-		PJ_UNUSED_ARG(call_id);
-		PJ_UNUSED_ARG(to);
-		PJ_UNUSED_ARG(contact);
-		PJ_UNUSED_ARG(mime_type);
-
-		printf ("~~~\n\n %.*s", (*from).slen, (*from).ptr);		
-		printf ("\n %.*s \n\n~~~\n", (*text).slen, (*text).ptr);
-	}
-
-}
-
-static void on_pager_status(pjsua_call_id call_id, const pj_str_t *to,
-                            const pj_str_t *body, void *user_data,
-                            pjsip_status_code status, const pj_str_t *reason)
-{
-	if (call_id == -1) {
-		
-	}
-}
-
-/* Display error and exit application */
-static void error_exit(const char *title, pj_status_t status)
-{
-    pjsua_perror(THIS_FILE, title, status);
-    pjsua_destroy();
-    exit(1);
-}
-
-			
 static void substr(char *dest, const char* src, unsigned int start, unsigned long cnt) {
    strncpy(dest, src + start, cnt);
    dest[cnt] = 0;
 }
 
-static char* pjStr_to_cstring(pj_str_t pjStr) {
+
+char* pjStr_to_cstring(pj_str_t *pjStr) {
 
     // if (pj_strcmp(pjStr, pj_str("")) != 0) {
         // If there's utf-8 ptr length is possibly lower than slen
-        long len = pjStr.slen;
-        if (pjStr.ptr != "") {
-            if (strlen(pjStr.ptr) < len) {
-                len = strlen(pjStr.ptr);
+        long len = pjStr->slen;
+        if (pjStr->ptr != "") {
+            if (strlen(pjStr->ptr) < len) {
+                len = strlen(pjStr->ptr);
             }
                 
             if (len > 0) {
-    				char *s = pjStr.ptr;
+    				char *s = pjStr->ptr;
     				char t[len+1];
     				substr(t, s, 0, len);
-                return t;
+                return *t;
             }
         }
     // }
@@ -125,7 +94,7 @@ static char* pjStr_to_cstring(pj_str_t pjStr) {
 	//                           4000,      // increment size
 	//                           NULL);     // use default callback.
 	//     if (pool == NULL) {
-	//         error_exit("Error in pjsua_create()", PJ_ENOMEM);
+	//         // error_exit("Error in pjsua_create()", PJ_ENOMEM);
 	//         return;
 	//     }
 	// 
@@ -134,8 +103,80 @@ static char* pjStr_to_cstring(pj_str_t pjStr) {
 	// 
 	// pj_pool_release(pool);
 	// 
-	// return *t.ptr;
+	// return t->ptr;
 }
+
+void msg_status_callback(int (*cb)(int, void *), void *userdata){
+    message_status = cb;
+	userData1 = userdata;
+}
+
+void income_msg_callback(int (*cb)(int, void *), void *userdata){
+    income_message = cb;
+	userData2 = userdata;
+}
+
+/** callback wrapper function called by pjsip
+ * MESSAGE status */
+static void on_pager_status(pjsua_call_id call_id, const pj_str_t *to,
+                            const pj_str_t *body, void *user_data,
+                            pjsip_status_code status, const pj_str_t *reason)
+{
+	if (call_id == -1) {
+		message_status(1, userData1, status);
+	}
+}
+
+/** callback wrapper function called by pjsip
+ * Incoming IM message (i.e. MESSAGE request)!*/
+static void on_pager_wrapper(pjsua_call_id call_id, const pj_str_t *from,
+		                     const pj_str_t *to, const pj_str_t *contact,
+						     const pj_str_t *mime_type, const pj_str_t *text)
+{
+	if (call_id == -1) { 
+		PJ_UNUSED_ARG(call_id);
+		// PJ_UNUSED_ARG(to);
+		PJ_UNUSED_ARG(contact);
+		PJ_UNUSED_ARG(mime_type);
+		
+		// char *fromChr = pjStr_to_cstring(from);
+		// char *textChr = pjStr_to_cstring(text);
+		// char *fromChr = from->ptr+'\0';
+		// char *toChr = to->ptr+'\0';
+		// char *bodyChr = text->ptr+'\0';
+		
+		income_message(1, userData2, from->ptr, to->ptr, text->ptr, from->slen, to->slen, text->slen);
+		
+		// cb_im_from(fromChr);
+		// cb_im_text(textChr);
+			
+		
+		// char *fromChr = from->ptr;
+		// char *textChr = text->ptr;
+		
+		// printf("~~~\n%s\n\n", fromChr);
+		// printf("%s\n~~~", textChr);
+		
+		
+		// printf("~~~\n%s\n\n", from->ptr);
+		// printf("\n%s\n~~~\n", text->ptr);
+
+		// printf ("~~~\n\n %.*s", from->slen, from->ptr);
+		// printf ("\n %.*s \n\n~~~\n", text->slen, text->ptr);
+	}
+
+}
+
+
+
+/* Display error and exit application */
+static void error_exit(const char *title, pj_status_t status)
+{
+    pjsua_perror(THIS_FILE, title, status);
+    pjsua_destroy();
+    exit(1);
+}
+
 
 int init(  char *domain, char * user, char * passwd, char *proxy)
 {
