@@ -4,6 +4,7 @@ This have be modified to support debian 6.0.4
 also added a simple send_im method for sending out im message
 
 For other linux distro/ osx (UNIX-like system), please edit the extconf.rb targetName to corresponding pjsip library (it should work)
+(you may have to fix the audio issue depend on your linux distro, please include those library)
 If you find make error while building the shared library,
 something like "relocation R_X86_64_32 against `pjsua_var' can not be used when making a shared object; recompile with -fPIC"
 You may have to re-compile the pjsip library again and add -fPIC as FLAG
