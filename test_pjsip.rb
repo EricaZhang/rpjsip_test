@@ -30,7 +30,7 @@ inmsg_cb = Proc.new {|event, userdata, from, to, body|
 income_msg_proc(inmsg_cb, "TEST**ING")
 
 
-sleep(15)
+# sleep(5)
 
 # end_call call_id
 

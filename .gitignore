@@ -1,5 +1,4 @@
 .DS_Store
-rtest_pjsip.rb
 Rpjsip/*.o
 Rpjsip/compilling_opts.txt
 Rpjsip/*.log
