@@ -100,7 +100,7 @@ VALUE method_send_im(VALUE self, VALUE hash)
 	char * msgbody = get_value(hash, (char*)":msgbody", (char*)"string");
 	
 	VALUE v =  INT2NUM(sendIm( acc_id, to_id, domain, msgbody ));
-	// execBlock(self);
+	execBlock(self);
 	return v;	
 }
 
@@ -132,7 +132,7 @@ char * string(VALUE v)
 	return (char*)rb_string_value_cstr(&v);
 }
 
-int  integer(VALUE v){
+int integer(VALUE v){
 	return NUM2INT(v);
 }
 

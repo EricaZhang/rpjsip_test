@@ -34,7 +34,7 @@ inmsg_cb = Proc.new {|event, userdata, from, to, body|
       # pjsip_destroy
       # exit
       $quitsip = true
-      end_pjsip
+
     end
 }
 income_msg_proc(inmsg_cb, "TEST**ING")
@@ -58,6 +58,7 @@ im_result = send_im( {:account_id => account_id,
 while $quitsip==false
 end
 
+end_pjsip
 
 # end_call call_id
 # pjsip_destroy
