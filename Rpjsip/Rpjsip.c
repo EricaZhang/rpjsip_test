@@ -11,7 +11,9 @@ int  integer(VALUE v);
 
 VALUE hash_get(VALUE hash, char * key);
 
-void * get_value( VALUE hash, char *key, void * (*c)(VALUE) );
+// void * get_value( VALUE hash, char *key, void * (*c)(VALUE) );
+void * get_value( VALUE hash, char *key, char *type );
+int get_int_value( VALUE hash, char *key );
 
 VALUE execBlock(VALUE v);
 
@@ -56,10 +58,15 @@ void Init_rpjsip() {
 
 VALUE method_pjsip_init(VALUE self, VALUE hash)
 {	
-	char * domain = get_value(hash, (char*)":domain", string);
-	char * user = get_value(hash, (char*)":user", string);
-	char * passwd = get_value(hash, (char*)":passwd", string);
-	char * proxy = get_value(hash, (char*)":proxy", string);
+	// char * domain = get_value(hash, (char*)":domain", string);
+	// char * user = get_value(hash, (char*)":user", string);
+	// char * passwd = get_value(hash, (char*)":passwd", string);
+	// char * proxy = get_value(hash, (char*)":proxy", string);
+	char * domain = get_value(hash, (char*)":domain", (char*)"string");
+	char * user = get_value(hash, (char*)":user", (char*)"string");
+	char * passwd = get_value(hash, (char*)":passwd", (char*)"string");
+	char * proxy = get_value(hash, (char*)":proxy", (char*)"string");
+	
 	return INT2NUM(init(domain, user, passwd, proxy));
 }
 
@@ -67,9 +74,13 @@ VALUE method_make_call(VALUE self, VALUE hash)
 {
 	//VALUE acc_id, volatile VALUE number, VALUE domain
 
-	int  acc_id = get_value( hash, (char*)":account_id", integer );
-	char * to_id = get_value(hash, (char*)":to_id", string);
-	char * domain = get_value(hash, (char*)":domain", string);
+	// int  acc_id = get_value( hash, (char*)":account_id", integer );
+	// char * to_id = get_value(hash, (char*)":to_id", string);
+	// char * domain = get_value(hash, (char*)":domain", string);
+	int acc_id = get_int_value( hash, (char*)":account_id" );
+	char * to_id = get_value(hash, (char*)":to_id", (char*)"string");
+	char * domain = get_value(hash, (char*)":domain", (char*)"string");
+	
 	VALUE v =  INT2NUM(call( acc_id, to_id, domain ));
 	execBlock(self);
 	return v;	
@@ -79,12 +90,17 @@ VALUE method_send_im(VALUE self, VALUE hash)
 {
 	//VALUE acc_id, volatile VALUE to, VALUE domain, VALUE msgbody
 	
-	int  acc_id = get_value( hash, (char*)":account_id", integer );
-	char * to_id = get_value(hash, (char*)":to_id", string);
-	char * domain = get_value(hash, (char*)":domain", string);
-	char * msgbody = get_value(hash, (char*)":msgbody", string);
+	// int  acc_id = get_value( hash, (char*)":account_id", integer );
+	// char * to_id = get_value(hash, (char*)":to_id", string);
+	// char * domain = get_value(hash, (char*)":domain", string);
+	// char * msgbody = get_value(hash, (char*)":msgbody", string);
+	int acc_id = get_int_value( hash, (char*)":account_id");
+	char * to_id = get_value(hash, (char*)":to_id", (char*)"string");
+	char * domain = get_value(hash, (char*)":domain", (char*)"string");
+	char * msgbody = get_value(hash, (char*)":msgbody", (char*)"string");
+	
 	VALUE v =  INT2NUM(sendIm( acc_id, to_id, domain, msgbody ));
-	// execBlock(self);
+	execBlock(self);
 	return v;	
 }
 
@@ -116,7 +132,7 @@ char * string(VALUE v)
 	return (char*)rb_string_value_cstr(&v);
 }
 
-int  integer(VALUE v){
+int integer(VALUE v){
 	return NUM2INT(v);
 }
 
@@ -125,15 +141,31 @@ VALUE hash_get(VALUE hash, char * key)
 	return rb_hash_aref(hash,rb_eval_string(key) );
 }
 
-void * get_value( VALUE hash, char *key, void * (*converter)(VALUE) )
+// void * get_value( VALUE hash, char *key, void * (*converter)(VALUE) )
+void * get_value( VALUE hash, char *key, char *type )
 {
 	VALUE v = hash_get(hash, key);
 	if(v  == Qnil){
 		rb_raise( rb_eException, "Symbol %s not found.", key );
 	}
-	return converter(v);
+	// return converter(v);
 	
+	if (strcmp(type, (char*)"string") == 0){	
+		return string(v);
+	}
 }
+
+int get_int_value( VALUE hash, char *key )
+{
+	VALUE v = hash_get(hash, key);
+	if(v  == Qnil){
+		rb_raise( rb_eException, "Symbol %s not found.", key );
+	}
+	// return converter(v);
+	return integer(v);
+}
+
+
 
 int msg_status_int_cb(int event, void *userdata, int status) {
     VALUE passthrough = (VALUE)userdata;

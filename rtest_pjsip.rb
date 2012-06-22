@@ -3,8 +3,6 @@ require 'rpjsip'
 
 include Rpjsip
 
-$quit = false
-
 account_id = pjsip_init( {:proxy => "223.255.138.226",
                           :domain => "223.255.138.226", 
                           :user => "test", 
@@ -24,6 +22,11 @@ msg_status_proc(status_cb, "TEST--ING")
 # end
 # msg_status_symbol(:status_cb, "TEST--ING")
 
+def end_pjsip
+  pjsip_destroy
+end
+
+$quitsip = false
 
 def finish
   pjsip_destroy
@@ -33,7 +36,11 @@ end
 inmsg_cb = Proc.new {|event, userdata, from, to, body|
     puts "\n>>>\n>>>>>>\n>>>>>>>>> \nfrom: #{from}\nto: #{to}\n#{body}\n>>>>>>>>>\n>>>>>>\n>>>\n"
     if (body == "done")
-      finish
+
+      # pjsip_destroy
+      # exit
+      $quitsip = true
+
 
     end
 }
@@ -55,5 +62,12 @@ im_result = send_im( {:account_id => account_id,
 
  sleep(100)
 
+while $quitsip==false
+end
+
+end_pjsip
+
 # end_call call_id
+
+# pjsip_destroy
 

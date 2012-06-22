@@ -130,7 +130,7 @@ int init(  char *domain, char * user, char * passwd, char *proxy)
     {
 	pjsua_config cfg;
 	pjsua_logging_config log_cfg;
-
+	pjsua_media_config media_cfg;
 	pjsua_config_default(&cfg);
 	
 	/* initialize pjsua callbacks */
@@ -143,11 +143,11 @@ int init(  char *domain, char * user, char * passwd, char *proxy)
 	pjsua_logging_config_default(&log_cfg);
 	log_cfg.console_level = 4;
 
+	pjsua_media_config_default(&media_cfg);
+
 	status = pjsua_init(&cfg, &log_cfg, NULL);
 	if (status != PJ_SUCCESS) error_exit("Error in pjsua_init()", status);
     }
-	pjsua_media_config media_cfg;
-	pjsua_media_config_default(&media_cfg);
 
     /* Add UDP transport. */
     {
@@ -167,13 +167,12 @@ int init(  char *domain, char * user, char * passwd, char *proxy)
 
     /* Register to SIP server by creating SIP account. */
     {
-	pjsua_acc_config cfg;
-
-	pjsua_acc_config_default(&cfg);	
-	
 	char reg_uri[5+strlen(domain)];
 	char id[6+strlen(user)+strlen(passwd)];
 	char proxy_uri[22+strlen(proxy)];
+			
+	pjsua_acc_config cfg;
+	pjsua_acc_config_default(&cfg);	
 
 	sprintf( reg_uri, "sip:%s", domain);
 	sprintf( id, "sip:%s@%s", user, domain);
@@ -200,13 +199,15 @@ int init(  char *domain, char * user, char * passwd, char *proxy)
 int call( int acc_id, char* to, char* domain )
 {
 		char str_uri[13+strlen(to)+strlen(domain)];
+		pj_str_t uri = pj_str((char*)"");
+		pjsua_call_id call_id;
+		pj_status_t status = 0;
 
 		snprintf( str_uri, sizeof(str_uri), "sip:%s@%s", to, domain);
 
-		pj_str_t uri = pj_str(str_uri);
-		pjsua_call_id call_id;
-		
-	    pj_status_t status = pjsua_call_make_call(acc_id, &uri, 0, NULL, NULL, &call_id);
+		uri = pj_str(str_uri);
+
+	    status = pjsua_call_make_call(acc_id, &uri, 0, NULL, NULL, &call_id);
 
 		if (status != PJ_SUCCESS) 
 		{ 
@@ -225,15 +226,18 @@ void endCall(int call_id)
 int sendIm( int acc_id, char* to, char* domain, char* msgbody )
 {
 		char str_uri[13+strlen(to)+strlen(domain)];
+		pj_str_t tmp_uri = pj_str((char*)"");
+		pj_str_t msg = pj_str((char*)"");
+		pj_status_t status = 0;
+		int result = 1;
 
 		snprintf( str_uri, sizeof(str_uri), "sip:%s@%s", to, domain);
 
-		pj_str_t tmp_uri = pj_str(str_uri);
-		pj_str_t msg = pj_str(msgbody);
+		tmp_uri = pj_str(str_uri);
+		msg = pj_str(msgbody);
 		
-		pj_status_t status = pjsua_im_send(acc_id, &tmp_uri, NULL, &msg, NULL, NULL);
+		status = pjsua_im_send(acc_id, &tmp_uri, NULL, &msg, NULL, NULL);
 		
-		int result = 1;
 		if (status != PJ_SUCCESS) 
 		{ 
 			result = 0;
