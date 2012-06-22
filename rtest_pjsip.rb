@@ -25,18 +25,23 @@ msg_status_proc(status_cb, "TEST--ING")
 # msg_status_symbol(:status_cb, "TEST--ING")
 
 
+def finish
+  pjsip_destroy
+
+end
+
 inmsg_cb = Proc.new {|event, userdata, from, to, body|
     puts "\n>>>\n>>>>>>\n>>>>>>>>> \nfrom: #{from}\nto: #{to}\n#{body}\n>>>>>>>>>\n>>>>>>\n>>>\n"
     if (body == "done")
-      pjsip_destroy
-      exit
+      finish
+
     end
 }
 income_msg_proc(inmsg_cb, "TEST**ING")
 
 
 im_result = send_im( {:account_id => account_id, 
-                      :to_id => "oscar", 
+                      :to_id => "50050",
                       :domain => "223.255.138.226",
                       :msgbody => " testing MSG 123 " })  { puts "\n\n\n\n------------> sending im!\n\n\n\n" } 
 
@@ -48,7 +53,7 @@ im_result = send_im( {:account_id => account_id,
 # end
 # income_msg_symbol(:inmsg_cb, "TEST**ING")
 
-# sleep(5)
+ sleep(100)
 
 # end_call call_id
-pjsip_destroy
+

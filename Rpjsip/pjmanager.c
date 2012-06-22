@@ -153,7 +153,7 @@ int init(  char *domain, char * user, char * passwd, char *proxy)
     {
 		pjsua_transport_config cfg;
 		pjsua_transport_config_default(&cfg);
-		cfg.port = 55060;
+		cfg.port = 5068;
 		status = pjsua_transport_create(PJSIP_TRANSPORT_UDP, &cfg, NULL);
 		if (status != PJ_SUCCESS)
 		{
